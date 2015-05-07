@@ -1,31 +1,38 @@
 <?php namespace Vdbf\SiteMapper;
 
 use SimpleXMLElement;
+use DateTime;
 
 final class Url
 {
 
     /**
-     * @var
+     * @var string
      */
     private $loc;
 
     /**
-     * @var null
+     * @var DateTime|null
      */
     private $lastmod;
 
     /**
-     * @var null
+     * @var string|null
      */
     private $changefreq;
 
     /**
-     * @var null
+     * @var double|null
      */
     private $priority;
 
-    public function __construct($loc, $lastmod = null, $changefreq = null, $priorty = null)
+    /**
+     * @param $loc
+     * @param DateTime $lastmod
+     * @param null $changefreq
+     * @param null $priorty
+     */
+    public function __construct($loc, DateTime $lastmod = null, $changefreq = null, $priorty = null)
     {
         $this->loc = $loc;
         $this->lastmod = $lastmod;
@@ -34,7 +41,7 @@ final class Url
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getLoc()
     {
@@ -42,7 +49,7 @@ final class Url
     }
 
     /**
-     * @return null
+     * @return DateTime|null
      */
     public function getLastmod()
     {
@@ -50,7 +57,7 @@ final class Url
     }
 
     /**
-     * @return null
+     * @return string|null
      */
     public function getChangefreq()
     {
@@ -58,7 +65,7 @@ final class Url
     }
 
     /**
-     * @return null
+     * @return double|null
      */
     public function getPriority()
     {
@@ -85,7 +92,7 @@ final class Url
         $url->addChild('loc', $this->getLoc());
 
         if ($this->getLastmod()) {
-            $url->addChild('lastmod', $this->getLastmod());
+            $url->addChild('lastmod', $this->getLastmod()->format(DateTime::ATOM));
         }
 
         if ($this->getChangefreq()) {

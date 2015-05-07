@@ -7,6 +7,7 @@ use Psr\Log\LogLevel;
 use Symfony\Component\DomCrawler\Link;
 use Vdbf\SiteMapper\Mapper;
 use Vdbf\SiteMapper\Url;
+use DateTime;
 
 class GuzzleCrawlClient implements CrawlClientInterface
 {
@@ -63,24 +64,34 @@ class GuzzleCrawlClient implements CrawlClientInterface
             $url = Mapper::stripTrailingSlash($response->getEffectiveUrl());
 
             //recheck uri because it might be redirected
-            if (!$mapper->isCrawled($url) && $mapper->filterUrl($url)) {
+            if (!$mapper->isCrawled($url)) {
 
-                $mapper->addMapping(new Url($url, $response->getHeader('Last-Modified')));
-                $mapper->log('UrlWasAddedToMapping ' . $url);
+                if ($mapper->filterUrl($url)) {
 
-                return [$url, (string)$response->getBody()];
+                    //last-modified header common format: DateTime::RFC1123
+                    $mapper->addMapping(new Url($url, new DateTime($response->getHeader('Last-Modified'))));
+
+                    $mapper->log('UrlWasAddedToMapping ' . $url);
+
+                    return [$url, (string)$response->getBody()];
+
+                }
+
+                $mapper->addExclude($url);
 
             }
 
-        } else {
+            return null;
 
-            $url = Mapper::stripTrailingSlash($response->getRequest()->getUrl());
-
-            /** @var \GuzzleHttp\Exception\ConnectException $response */
-            $mapper->log($response->getMessage(), LogLevel::ERROR);
         }
 
+        /** @var \GuzzleHttp\Exception\RequestException $response */
+        $url = Mapper::stripTrailingSlash($response->getRequest()->getUrl());
+
+        //url throws an exception, add it to the excludes
         $mapper->addExclude($url);
+
+        $mapper->log($response->getMessage(), LogLevel::ERROR);
 
         return null;
     }
